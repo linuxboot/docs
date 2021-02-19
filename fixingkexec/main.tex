@@ -1,0 +1,56 @@
+\documentclass[fleqn,10pt]{olplainarticle}
+% Use option lineno for line numbers 
+
+\title{Fixing kexec}
+
+\author[1]{Ron Minnich}
+%%\author[2]{Second Author}
+\affil[1]{Google}
+%%\affil[2]{Address of second author}
+
+\keywords{booting,linux,kexec}
+
+\begin{abstract}
+Kexec began life as a bootstrap, but it's never quite gotten there. There are a host of issues that need to be fixed before it can achieve its goal. In this document, we detail the problems, and discuss possible solutions.
+\end{abstract}
+
+\begin{document}
+
+\flushbottom
+\maketitle
+\thispagestyle{empty}
+
+\section*{Introduction}
+
+kexec was intended to be a bootloader replacement, built into Linux. In its earliest incarnation, it was hooked into the kernel exec path, such that one could, for example, type
+\begin{verbatim}
+    ./vmlinux
+\end{verbatim}
+and linux would boot. That was a long time ago, and since that time, kexec has become, not one, but two, system calls.
+The original system call, \textbf{kexec\_load} works but is awkward at best to use. 
+The newer call, \textbf{kexec\_file\_load}, is far easier to use but lacks important capabilities, namely, the ability to have more than two
+components in a bootstrap image.
+
+In this paper we discuss the problems of kexec and possible solutions.
+\section*{kexec problems}
+
+\begin{itemize}
+    \item The \textbf{kexec\_load}  call is flexible, but hard to use. This problem has existed for years, made worse by the fact that it is very easy to panic the kernel with some very simple mistakes.
+    \item the \textbf{kexec\_file\_load} call is easy to use, but not sufficiently capable.For example, it is not possible, on x86, to set up new bootparams; or, on ARM, to add a DTB.
+    \item the \textbf{kexec\_load}  call requires the provision of a purgatory, to start the next kernel, and the one provided is fiendishly difficult to debug (one motivation for the \textbf{kexec\_file\_load} system call). But this purgatory has useful capabilities, such as, on x86, being able to start the new kernel via the 32-bit entry point.
+    \item the \textbf{kexec\_file\_load} call lacks important functionality, such as the ability to start a kernel at other than the 64-bit entry point.
+\end{itemize}
+
+In sum, one call is very flexible, to the point that it is complex, hard to use, and hence, little-used. The other, frequently used one, lacks important capabilities that can lead to odd failures when booting the next kernel. That next kernel sometimes boots and fails, having been started in the 64-bit, not the 32-bit, entry point.
+
+It is time to make kexec useful for bootloading. 
+
+\section*{Approaches}
+
+\section*{Acknowledgments}
+
+Thanks to you all
+
+\bibliography{bib}
+
+\end{document}
